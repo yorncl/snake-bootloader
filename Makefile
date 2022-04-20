@@ -11,7 +11,10 @@ $(NAME): $(SRC)
 	$(AS) $(ASFLAGS) $(SRC) -o $(NAME)
 
 run: $(NAME)
-	$(QEMU) -drive format=raw,file=$(NAME)
+		$(QEMU) -drive format=raw,file=$(NAME)
+
+debug: $(NAME)
+		$(QEMU) -drive format=raw,file=$(NAME) -s -S
 
 clean:
 	$(RM) $(NAME) $(IMG)
