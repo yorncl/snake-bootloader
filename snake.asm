@@ -9,11 +9,11 @@ mov ah, 0x1
 mov cx, 0x2607
 int 0x10 ; Removing cursor
 
-mov ax, 0xB800 ; Address of VGA text buffer
+mov ax, snake_base ; Address of working-area memory for the snake
 mov es, ax ; setting the extra segment
 
-mov ax, snake_base ; Address of working-area memory for the snake
-mov ds, ax
+mov ax, 0xb800 ; Segment for the VGA text mode buffer
+mov fs, ax
 
 
 start: ; Init the game
@@ -24,35 +24,60 @@ loop_start:
 check_input:
 	mov ah, 0x1
 	int 0x16
-	jz update_snake
+	jz input_end
 	mov ah, 0
 	int 0x16 ; clearing keyboard buffer ? weird behaviour when smashing keyboard
-	mov [direction], al
+	check_left:
+	cmp al, 'a'
+	jne check_up
+	mov [delta], word -0x1
+	jmp input_end
+	check_up:
+	cmp al, 'w'
+	jne check_right
+	mov [delta], word -0x100
+	jmp input_end
+	check_right:
+	cmp al, 'd'
+	jne check_down
+	mov [delta], word 0x1
+	jmp input_end
+	check_down:
+	cmp al, 's'
+	jne input_end
+	mov [delta], word 0x100
 
+input_end:
+	;clearing the snake
+	mov si, ' '
+	call print_snake
 update_snake:
-	;mov al, [snake_base + 1]
-	;mov al, [snake_base + 1]
-
-print_snake:
-	mov ax, 0
-print_snake_loop:
+	mov ax, [snake_len]
+	update_snake_loop:
 	mov bx, ax
 	imul bx, 2
-	movzx cx, byte [ds:bx + 1]
-	movzx bx, byte [ds:bx]
-	mov dx, 'o'
-	add dx, ax
-	call put_char
-	inc ax
-	mov bx, [snake_len]
-	cmp ax, bx
-	jl print_snake_loop
+	mov dx, word [es:bx - 2]
+	mov [es:bx], word dx
+	dec ax
+	cmp ax, 0
+	jne update_snake_loop
+
+update_end:
+	mov bx, ax
+	imul bx, 2
+	mov dx, [es:bx]
+	add dx, [delta]
+	mov [es:bx], dx ;shifting the head
+
+	;printing the snake
+	mov si, 'o'
+	call print_snake
 
 print_food:
-	movzx bx, byte [food]
-	movzx cx, byte [food + 1]
+	movzx bx, [foodx]
+	movzx cx, [foody]
 	mov dx, 'X'
-	;call put_char
+	call put_char
 
 wait_a_bit:
 	mov ah, 0x86
@@ -65,40 +90,52 @@ loop:
 ;
 ; Callable procedures
 ;
+print_snake:
+	mov ax, 0
+print_snake_loop:
+	mov bx, ax
+	imul bx, 2
+	movzx cx, byte [es:bx + 1]
+	movzx bx, byte [es:bx]
+	mov dx, si
+	call put_char
+	inc ax
+	cmp ax, [snake_len]
+	jl print_snake_loop
+	ret
 put_char:
 	imul cx, 80
 	add cx, bx
 	imul cx, 2
 	mov bx, cx
-	mov byte [es:bx], dl
+	mov byte [fs:bx], dl
 	ret
 
 spawn_snake:
-	mov byte [ds:0], 39
-	mov byte [ds:1], 12
-	mov byte [ds:2], 38
-	mov byte [ds:3], 12
+	mov byte [es:0], 15
+	mov byte [es:1], 12
+	mov byte [es:2], 14
+	mov byte [es:3], 12
+	mov byte [es:4], 13
+	mov byte [es:5], 12
 	ret
 
 spawn_food:
-	mov byte [food], 40
-	mov byte [food + 1], 12
+	mov byte [foodx], 50
+	mov byte [foody], 12
 	ret
 
-;shift_snake:
-;	mov si, [len]
-;	imul si, 2
-;	mov ax, 0
 ;shift_loop:
 ;	cmp ax, si
 ;	add ax, 2
 ;	jne shift_loop
 ;	ret
 
-food dw 0x7E0
+foodx db 1
+foody db 2
+delta dw 0x1
 snake_base dw 0x7E1
-direction db 'd'
-snake_len dw 2
+snake_len dw 0x3
 
 times 510-($-$$) db 0
 	db 0x55
