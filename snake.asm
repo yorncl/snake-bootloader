@@ -20,6 +20,7 @@ int 0x10 ; Removing cursor
 ; Setting the default values
 mov [delta], word 0x1
 mov [snake_len], word 0x4
+mov [growth], word 0x0
 
 call spawn_food
 call spawn_snake
@@ -122,7 +123,7 @@ print_food:
 
 wait_a_bit:
 	mov ah, 0x86
-	mov dx, 0xFFFF
+	mov dx, 0xbFFF
 	mov cx, 0x0
 	int 0x15
 
@@ -161,24 +162,22 @@ spawn_snake:
 	ret
 
 spawn_food:
-	mov bx, word 80
+	mov bx, word 75
 	call random
-	mov [food + 1 ], byte 12
-	mov bx, word 25
+	add al, 2 ; avoid food spawn against sides
+	mov [food], byte al
+	mov bx, word 20
 	call random
-	mov [food], byte 25
+	add al, 2
+	mov [food + 1], byte al
 	ret
 random:
-	push ax
-
 	xor ax, ax
 	int 0x1a
-	mov ax, cx
+	mov ax, dx
 	xor dx, dx
 	div bx
-	mov si, dx
-
-	pop ax
+	mov ax, dx
 	ret
 
 food dw 0
