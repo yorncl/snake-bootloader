@@ -1,6 +1,7 @@
 org 0x07C00
 
-
+mov ax, 0x07C0
+mov ds, ax
 
 mov ax, 0x07E1 ; Address of working-area memory for the snake
 mov es, ax ; setting the extra segment
@@ -8,15 +9,24 @@ mov es, ax ; setting the extra segment
 mov ax, 0xb800 ; Segment for the VGA text mode buffer
 mov fs, ax
 
+mov ah, 0x0
+mov al, 0x3
+int 0x10
 
 start: ; Init the game
-mov ax, 0x03 ; go vga text mode
-int 0x10
+mov ax, 0x0700 ; clear screen
+mov bh, 0x0f
+xor cx, cx
+mov dx, 0x1950
+int 0x10 ; TODO remove the snake clearning function
 
 mov ah, 0x1
 mov cx, 0x2607
 int 0x10 ; Removing cursor
 
+mov ax, 0x0305
+mov bx, 0x031f
+int 0x16
 ; Setting the default values
 mov [delta], word 0x1
 mov [snake_len], word 0x4
@@ -186,5 +196,4 @@ snake_len dw 0x4
 growth db 0
 
 times 510-($-$$) db 0
-	db 0x55
-	db 0xAA
+dw 0xaa55
