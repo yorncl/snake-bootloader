@@ -1,6 +1,6 @@
 # snake-bootloader
 
-An snake game running into a x86 bootloader.
+A snake game running from a x86 bootloader.
 The code is under 256 bytes long.
 
 ## Demo
