@@ -30,5 +30,5 @@ You can use `dd` to burn it on your usb, like so :
 
 `dd if=./snake-asm of=/dev/yourusb bs=256`
 
-It will erase the first 256 bytes of your key.
+It will write the game into the first 512 bytes.
 Your usb key should be bootable after that.
